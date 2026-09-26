@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}Support Chat{% endblock %}
+
+{% block content %}
+
+<main class="container">
+
+    <!-- HEADER -->
+
+    <section class="panel ticket-header">
+
+        <div>
+
+            <a href="{{ url_for('admin_support') }}">
+                ← Admin Support
+            </a>
+
+            <h2>
+                🎫 #{{ ticket["id"] }} -
+                {{ ticket["subject"] }}
+            </h2>
+
+            <p>
+                👤 {{ ticket["name"] }}
+                &nbsp; | &nbsp;
+                {{ ticket["email"] }}
+            </p>
+
+            <p class="muted">
+                {{ ticket["category"] }}
+            </p>
+
+        </div>
+
+
+        <div>
+
+            {% if ticket["status"] == "Open" %}
+                🟠 Open
+            {% elif ticket["status"] == "In Progress" %}
+                🟡 In Progress
+            {% elif ticket["status"] == "Resolved" %}
+                🟢 Resolved
+            {% elif ticket["status"] == "Closed" %}
+                ⚫ Closed
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+    <!-- CHAT -->
+
+    <section class="chat-window">
+
+        <div class="chat-messages">
+
+            {% if messages %}
+
+                {% for msg in messages %}
+
+                    {% if msg["sender_type"] == "Customer" %}
+
+                        <!-- CUSTOMER -->
+
+                        <div class="message-row customer-row">
+
+                            <div class="message customer-message">
+
+                                <div class="message-name">
+                                    👤 {{ msg["name"] }}
+                                </div>
+
+                                <div class="message-text">
+                                    {{ msg["message"] }}
+                                </div>
+
+                                <div class="message-time">
+                                    {{ msg["created_at"] }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% else %}
+
+                        <!-- ADMIN -->
+
+                        <div class="message-row admin-row">
+
+                            <div class="message admin-message">
+
+                                <div class="message-name">
+                                    🛠️ You — Support
+                                </div>
+
+                                <div class="message-text">
+                                    {{ msg["message"] }}
+                                </div>
+
+                                <div class="message-time">
+                                    {{ msg["created_at"] }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty-chat">
+
+                    <div style="font-size:40px;">
+                        💬
+                    </div>
+
+                    <h3>No messages yet</h3>
+
+                    <p>
+                        Start the conversation with the customer.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- ADMIN INPUT -->
+
+        {% if ticket["status"] != "Closed" %}
+
+        <div class="chat-input-area">
+
+            <form method="POST" class="chat-form">
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="reply"
+                >
+
+                <select name="status">
+
+                    <option value="Open"
+                        {% if ticket["status"] == "Open" %}
+                        selected
+                        {% endif %}
+                    >
+                        Open
+                    </option>
+
+                    <option value="In Progress"
+                        {% if ticket["status"] == "In Progress" %}
+                        selected
+                        {% endif %}
+                    >
+                        In Progress
+                    </option>
+
+                    <option value="Resolved"
+                        {% if ticket["status"] == "Resolved" %}
+                        selected
+                        {% endif %}
+                    >
+                        Resolved
+                    </option>
+
+                </select>
+
+                <input
+                    type="text"
+                    name="message"
+                    placeholder="Type your response..."
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit">
+                    ➤
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- CLOSE -->
+
+        <div class="chat-actions">
+
+            <form
+                method="POST"
+                onsubmit="return confirm('Are you sure you want to close this ticket?');"
+            >
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="close"
+                >
+
+                <button type="submit" class="danger">
+                    Close Ticket
+                </button>
+
+            </form>
+
+        </div>
+
+        {% else %}
+
+        <div class="closed-ticket">
+
+            ⚫ This ticket is closed.
+
+            <br>
+
+            <small>
+                No further messages can be sent.
+            </small>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+
+<style>
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+
+.chat-window {
+    max-width: 850px;
+    margin: auto;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+
+.chat-messages {
+    height: 500px;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.message-row {
+    display: flex;
+    width: 100%;
+}
+
+
+.customer-row {
+    justify-content: flex-start;
+}
+
+
+.admin-row {
+    justify-content: flex-end;
+}
+
+
+.message {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 12px;
+}
+
+
+.customer-message {
+    background: white;
+    border: 1px solid #ddd;
+    border-bottom-left-radius: 3px;
+}
+
+
+.admin-message {
+    background: #d9fdd3;
+    border-bottom-right-radius: 3px;
+}
+
+
+.message-name {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+
+.message-text {
+    font-size: 15px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+
+.message-time {
+    font-size: 10px;
+    color: #777;
+    text-align: right;
+    margin-top: 5px;
+}
+
+
+.chat-input-area {
+    background: white;
+    padding: 12px;
+    border-top: 1px solid #ddd;
+}
+
+
+.chat-form {
+    display: flex;
+    gap: 10px;
+}
+
+
+.chat-form input {
+    flex: 1;
+    margin: 0;
+}
+
+
+.chat-form select {
+    width: 150px;
+    margin: 0;
+}
+
+
+.chat-form button {
+    width: 50px;
+    border: none;
+    border-radius: 50%;
+    background: #25d366;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+
+.chat-actions {
+    background: white;
+    padding: 10px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+}
+
+
+.danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+
+.closed-ticket {
+    text-align: center;
+    padding: 20px;
+    background: #eee;
+    color: #555;
+}
+
+
+.empty-chat {
+    text-align: center;
+    margin: auto;
+    color: #777;
+}
+
+
+@media (max-width: 600px) {
+
+    .chat-messages {
+        height: 450px;
+        padding: 12px;
+    }
+
+    .message {
+        max-width: 85%;
+    }
+
+    .ticket-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .chat-form select {
+        width: 100px;
+    }
+
+}
+
+</style>
+
+{% endblock %}

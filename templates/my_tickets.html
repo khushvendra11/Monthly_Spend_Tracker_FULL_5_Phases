@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}My Support Tickets{% endblock %}
+
+{% block content %}
+
+<main class="container">
+
+    <section class="panel">
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h1>My Support Tickets</h1>
+                <p class="muted">
+                    Track your support requests.
+                </p>
+            </div>
+
+            <a href="{{ url_for('customer_support') }}" class="primary">
+                + New Ticket
+            </a>
+        </div>
+
+    </section>
+
+
+    {% if tickets %}
+
+        {% for ticket in tickets %}
+
+        <section class="panel">
+
+            <div style="display:flex; justify-content:space-between;">
+
+                <div>
+
+                    <h2>
+                        #{{ ticket["id"] }} -
+                        {{ ticket["subject"] }}
+                    </h2>
+
+                    <p class="muted">
+                        Category: {{ ticket["category"] }}
+                    </p>
+
+                    <p>
+                        {{ ticket["message"] }}
+                    </p>
+
+                </div>
+
+                <div>
+
+                    {% if ticket["status"] == "Open" %}
+                        <strong>🟠 Open</strong>
+
+                    {% elif ticket["status"] == "In Progress" %}
+                        <strong>🟡 In Progress</strong>
+
+                    {% else %}
+                        <strong>🟢 Resolved</strong>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% if ticket["admin_response"] %}
+
+                <hr>
+
+                <h3>Support Response</h3>
+
+                <p>
+                    {{ ticket["admin_response"] }}
+                </p>
+
+            {% endif %}
+
+            <a href="{{ url_for('view_ticket', ticket_id=ticket['id']) }}">
+                View Ticket
+            </a>
+
+        </section>
+
+        {% endfor %}
+
+    {% else %}
+
+        <section class="panel">
+
+            <h2>No Support Tickets</h2>
+
+            <p class="muted">
+                You haven't submitted any support tickets yet.
+            </p>
+
+            <a href="{{ url_for('customer_support') }}" class="primary">
+                Create Your First Ticket
+            </a>
+
+        </section>
+
+    {% endif %}
+
+</main>
+
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Support{% endblock %}
+
+{% block content %}
+
+<main class="container narrow">
+
+    <section class="panel">
+
+        <h1>Customer Support</h1>
+
+        <p class="muted">
+            Having an issue? Create a support ticket and our support team
+            will help you.
+        </p>
+
+        <form method="POST">
+
+            <label>Subject</label>
+            <input
+                type="text"
+                name="subject"
+                placeholder="Example: Unable to add expense"
+                required
+            >
+
+            <label>Issue Category</label>
+
+            <select name="category" required>
+
+                <option value="">Select Category</option>
+                <option value="Technical Issue">Technical Issue</option>
+                <option value="Account Issue">Account Issue</option>
+                <option value="Transaction Issue">Transaction Issue</option>
+                <option value="Budget Issue">Budget Issue</option>
+                <option value="Other">Other</option>
+
+            </select>
+
+            <label>Describe Your Issue</label>
+
+            <textarea
+                name="message"
+                rows="7"
+                placeholder="Explain your problem..."
+                required
+            ></textarea>
+
+            <button class="primary" type="submit">
+                Submit Ticket
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>Need Help?</h2>
+
+        <p>
+            Please provide as much information as possible so the support
+            team can understand your problem.
+        </p>
+
+        <p>
+            <strong>Support Hours:</strong>
+            Monday - Saturday, 10:00 AM - 6:00 PM
+        </p>
+
+    </section>
+
+</main>
+
+{% endblock %}

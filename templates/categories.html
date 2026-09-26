@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}Categories{% endblock %}
+{% block content %}
+<main class="container narrow">
+<section class="panel"><h1>Expense Categories</h1><p class="muted">Create categories for your own spending style.</p>
+<form method="post" action="{{url_for('add_category')}}" class="inlineform"><input name="name" placeholder="e.g. Gym, Pets, Gaming" required><button class="primary">Add Category</button></form></section>
+<section class="panel"><h2>Your Categories</h2><div class="chips">{% for c in cats %}<span>{{c}}</span>{% endfor %}</div></section>
+</main>
+{% endblock %}

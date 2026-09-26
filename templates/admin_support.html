@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Support{% endblock %}
+
+{% block content %}
+
+<main class="container">
+
+    <section class="panel">
+
+        <h1>🎫 Admin Support Panel</h1>
+
+        <p class="muted">
+            Manage customer support tickets.
+        </p>
+
+    </section>
+
+    {% if tickets %}
+
+        {% for ticket in tickets %}
+
+        <section class="panel">
+
+            <h2>
+                #{{ ticket["id"] }} - {{ ticket["subject"] }}
+            </h2>
+
+            <p>
+                <strong>User:</strong>
+                {{ ticket["name"] }}
+            </p>
+
+            <p>
+                <strong>Email:</strong>
+                {{ ticket["email"] }}
+            </p>
+
+            <p>
+                <strong>Category:</strong>
+                {{ ticket["category"] }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+
+                {% if ticket["status"] == "Open" %}
+                    🟠 Open
+                {% elif ticket["status"] == "In Progress" %}
+                    🟡 In Progress
+                {% else %}
+                    🟢 Resolved
+                {% endif %}
+
+            </p>
+
+            <p>
+                {{ ticket["message"] }}
+            </p>
+
+            <a
+                href="{{ url_for('admin_ticket', ticket_id=ticket['id']) }}"
+                class="primary"
+            >
+                Manage Ticket
+            </a>
+
+        </section>
+
+        {% endfor %}
+
+    {% else %}
+
+        <section class="panel">
+
+            <h2>No Tickets</h2>
+
+            <p class="muted">
+                There are currently no support tickets.
+            </p>
+
+        </section>
+
+    {% endif %}
+
+</main>
+
+{% endblock %}

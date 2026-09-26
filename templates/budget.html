@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}Smart Budget{% endblock %}
+{% block content %}<main class="container">
+<section class="panel"><h1>🎯 Smart Monthly Budget</h1><p class="muted">Set your own budget and compare it with a calculated planning guide.</p>
+<form method="post" class="formgrid"><div><label>Month</label><select name="month">{% for m in range(1,13) %}<option value="{{m}}" {% if m==month %}selected{% endif %}>{{month_names[m-1]}}</option>{% endfor %}</select></div><div><label>Year</label><input name="year" type="number" min="2020" max="2100" value="{{year}}"></div><div class="fullrow"><label>Budget Amount (₹)</label><input name="amount" type="number" min="0" step="0.01" required></div><div class="fullrow"><button class="primary">Save Budget</button></div></form></section>
+<form method="POST" action="{{ url_for('reset_budget') }}"
+      onsubmit="return confirm('Are you sure you want to reset this month’s budget?');">
+
+    <button type="submit" class="danger">
+        Reset Current Month Budget
+    </button>
+
+</form>
+<section class="cards"><div class="card"><span>Income</span><strong class="green">₹{{'%.2f'|format(plan_income)}}</strong><small>Current month</small></div><div class="card"><span>Recommended Spending</span><strong>₹{{'%.2f'|format(recommended)}}</strong><small>80% planning guide</small></div><div class="card"><span>Savings Target</span><strong class="green">₹{{'%.2f'|format(savings_target)}}</strong><small>20% target</small></div><div class="card"><span>Daily Guide</span><strong>₹{{'%.2f'|format(daily_guide)}}</strong><small>Remaining days: {{days_left}}</small></div></section>
+<section class="panel"><h2>How to use this plan</h2><ol><li>Record all income and expenses.</li><li>Try to keep spending within the recommended amount.</li><li>Keep the savings target aside before discretionary spending.</li><li>Use the daily guide to control spending during the rest of the month.</li><li>Review Reports to see which categories need attention.</li></ol></section>
+<section class="panel"><h2>Saved Budgets</h2>{% for b in budgets %}<div class="tx"><span>{{month_names[b['month']-1]}} {{b['year']}}</span><b>₹{{'%.2f'|format(b['amount'])}}</b></div>{% else %}<p class="muted">No budgets saved yet.</p>{% endfor %}</section>
+</main>{% endblock %}

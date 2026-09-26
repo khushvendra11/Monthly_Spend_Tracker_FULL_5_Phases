@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}SpendTrack{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+{% if logged_in %}
+<nav class="nav">
+<a class="brand" href="{{ url_for('dashboard') }}">💰 SpendTrack</a>
+<div class="navlinks">
+<a href="{{ url_for('dashboard') }}">Dashboard</a>
+<a href="{{ url_for('transactions') }}">Transactions</a>
+<a href="{{ url_for('budget') }}">Budget</a>
+<a href="{{ url_for('reports') }}">Reports</a>
+<a href="{{ url_for('categories') }}">Categories</a>
+<a href="{{ url_for('profile') }}">Profile</a>
+<a href="{{ url_for('help_page') }}">Help</a>
+<a href="{{ url_for('customer_support') }}">Customer Support</a>
+<a href="{{ url_for('my_tickets') }}">My Tickets</a>
+<a class="logout" href="{{ url_for('logout') }}">Logout</a>
+</div>
+</nav>
+{% endif %}
+{% with messages=get_flashed_messages(with_categories=true) %}
+<div class="flashwrap">{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}</div>
+{% endwith %}
+{% block content %}{% endblock %}
+</body>
+</html>

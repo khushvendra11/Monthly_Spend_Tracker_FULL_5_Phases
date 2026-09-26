@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block title %}Transactions{% endblock %}
+{% block content %}
+<main class="container">
+<div class="hero"><div><h1>Transactions</h1><p class="muted">Manage all your income and expenses.</p></div>
+<div class="quick"><a class="primary" href="{{url_for('add_expense')}}">+ Expense</a><a class="secondary" href="{{url_for('add_income')}}">+ Income</a></div></div>
+<form class="filters">
+<input name="q" value="{{q}}" placeholder="Search description/category/source">
+<select name="type"><option value="">All Types</option><option value="income" {% if type_filter=="income" %}selected{% endif %}>Income</option><option value="expense" {% if type_filter=="expense" %}selected{% endif %}>Expense</option></select>
+<select name="category"><option value="">All Categories</option>{% for c in categories %}<option value="{{c}}" {% if selected_category==c %}selected{% endif %}>{{c}}</option>{% endfor %}</select>
+<input type="date" name="start" value="{{start}}"><input type="date" name="end" value="{{end}}">
+<button class="primary">Filter</button><a class="secondary" href="{{url_for('transactions')}}">Clear</a>
+</form>
+<section class="panel tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Category/Source</th><th>Amount</th><th>Payment</th><th>Description</th><th>Actions</th></tr></thead><tbody>
+{% for t in transactions %}
+<tr><td>{{t["transaction_date"]}}</td><td><span class="pill {{t['type']}}">{{t["type"]|title}}</span></td><td>{{t["category"] or t["source"]}}</td><td class="{{'green' if t['type']=='income' else 'red'}}">₹{{"%.2f"|format(t["amount"])}}</td><td>{{t["payment_method"] or "-"}}</td><td>{{t["description"] or "-"}}</td><td class="rowactions"><a href="{{url_for('edit_transaction',tid=t['id'])}}">Edit</a><form method="post" action="{{url_for('delete_transaction',tid=t['id'])}}" onsubmit="return confirm('Delete this transaction?')"><button class="delete">Delete</button></form></td></tr>
+{% else %}<tr><td colspan="7" class="empty">No transactions found.</td></tr>{% endfor %}
+</tbody></table></section>
+</main>
+{% endblock %}

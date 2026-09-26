@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Profile{% endblock %}
+{% block content %}
+<main class="container narrow"><section class="panel"><h1>👤 My Profile</h1><p class="muted">Update your account information and profile photo.</p>
+<form method="post" enctype="multipart/form-data">
+<div style="text-align:center;margin:18px 0">
+{% if user['profile_photo'] %}<img src="{{ url_for('static',filename='uploads/'+user['profile_photo']) }}" alt="Profile photo" style="width:120px;height:120px;border-radius:50%;object-fit:cover">{% else %}<div style="width:120px;height:120px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;background:#eee;font-size:48px">👤</div>{% endif %}
+</div>
+<label>Profile Photo</label><input type="file" name="profile_photo" accept=".png,.jpg,.jpeg,.webp">
+<label>Name</label><input name="name" value="{{user['name']}}" required>
+<label>Email</label><input name="email" type="email" value="{{user['email']}}" required>
+<button class="primary">Save Changes</button></form></section></main>
+{% endblock %}

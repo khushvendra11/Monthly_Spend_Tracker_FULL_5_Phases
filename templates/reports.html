@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}Reports{% endblock %}
+{% block content %}
+<main class="container">
+<div class="hero"><div><h1>Reports & Analytics</h1><p class="muted">Understand where your money goes.</p></div></div>
+<form class="filters"><select name="month">{% for m in range(1,13) %}<option value="{{m}}" {% if m==month %}selected{% endif %}>{{month_names[m-1]}}</option>{% endfor %}</select><input name="year" type="number" value="{{year}}"><button class="primary">View Report</button></form>
+<div class="cards"><div class="card"><span>Income</span><strong class="green">₹{{"%.2f"|format(income)}}</strong></div><div class="card"><span>Expenses</span><strong class="red">₹{{"%.2f"|format(expense)}}</strong></div><div class="card"><span>Savings</span><strong>₹{{"%.2f"|format(savings)}}</strong></div><div class="card"><span>Budget</span><strong>₹{{"%.2f"|format(budget)}}</strong></div></div>
+<div class="grid2"><section class="panel"><h2>Category-wise Spending</h2><canvas id="categoryChart"></canvas></section>
+<section class="panel"><h2>Breakdown</h2>{% for c in cats %}<div class="tx"><span>{{c["category"]}}</span><b>₹{{"%.2f"|format(c["total"])}}</b></div>{% else %}<div class="empty">No expense data.</div>{% endfor %}</section></div>
+</main>
+<script>
+const labels={{ cats|map(attribute="category")|list|tojson }};
+const values={{ cats|map(attribute="total")|list|tojson }};
+new Chart(document.getElementById("categoryChart"),{type:"doughnut",data:{labels:labels,datasets:[{data:values}]},options:{responsive:true}});
+</script>
+{% endblock %}
