@@ -16,33 +16,54 @@
         💰 SpendTrack
     </a>
 
-    <div class="navlinks">
+    <!-- Mobile three-dot menu -->
+    <button
+        class="mobile-menu-btn"
+        onclick="toggleMobileMenu()"
+        aria-label="Open menu"
+    >
+        ⋮
+    </button>
 
-        <a href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('transactions') }}">Transactions</a>
-        <a href="{{ url_for('budget') }}">Budget</a>
-        <a href="{{ url_for('reports') }}">Reports</a>
-        <a href="{{ url_for('categories') }}">Categories</a>
-        <a href="{{ url_for('profile') }}">Profile</a>
-        <a href="{{ url_for('help_page') }}">Help</a>
+    <div class="navlinks" id="mainNav">
+
+        <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+
+        <a href="{{ url_for('transactions') }}">💳 Transactions</a>
+
+        <a href="{{ url_for('budget') }}">💰 Budget</a>
+
+        <a href="{{ url_for('reports') }}">📊 Reports</a>
+
+        <a href="{{ url_for('categories') }}">🗂 Categories</a>
+
+        <a href="{{ url_for('profile') }}">👤 Profile</a>
+
+        <a href="{{ url_for('help_page') }}">❓ Help</a>
+
         <a href="{{ url_for('customer_support') }}">
-            Customer Support
+            🎧 Customer Support
         </a>
+
         <a href="{{ url_for('my_tickets') }}">
-            My Tickets
+            💬 My Tickets
         </a>
 
         {% if session.get("user_email") == "khushvendrasingh2006@gmail.com" %}
+
             <a href="{{ url_for('admin_support') }}">
                 🛠️ Admin Support
             </a>
+
         {% endif %}
 
         <a class="logout" href="{{ url_for('logout') }}">
-            Logout
+            🚪 Logout
         </a>
 
     </div>
+
+</nav>
 
 </nav>
 
@@ -51,5 +72,16 @@
 <div class="flashwrap">{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}</div>
 {% endwith %}
 {% block content %}{% endblock %}
+<script>
+
+function toggleMobileMenu() {
+
+    const menu = document.getElementById("mainNav");
+
+    menu.classList.toggle("mobile-open");
+
+}
+
+</script>
 </body>
 </html>

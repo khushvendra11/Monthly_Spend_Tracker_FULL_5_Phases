@@ -48,3 +48,165 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #d5dbe4;border-ra
 .rowactions{display:flex;gap:8px;align-items:center}.rowactions form{margin:0}.inlineform{display:grid;grid-template-columns:1fr auto;gap:10px}.chips{display:flex;flex-wrap:wrap;gap:9px}.chips span{background:#eef4ff;color:#2563eb;padding:8px 12px;border-radius:20px;font-weight:700}
 @media(max-width:950px){.cards{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr 1fr}.navlinks a:not(.logout){display:none}}
 @media(max-width:650px){.cards,.grid2{grid-template-columns:1fr}.hero{display:block}.quick{margin-top:15px}.formgrid,.filters{grid-template-columns:1fr}.fullrow{grid-column:auto}.nav{padding:0 18px}.container{padding:25px 15px}.authcard{padding:25px}.inlineform{grid-template-columns:1fr}}
+/* =========================================
+   MOBILE NAVIGATION
+========================================= */
+
+.mobile-menu-btn {
+    display: none;
+    border: none;
+    background: transparent;
+    color: #172033;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 950px) {
+
+    .nav {
+        padding: 0 20px;
+    }
+
+    .navlinks a {
+        display: none;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+
+}
+
+
+/* =========================================
+   MOBILE MENU OPEN
+========================================= */
+
+@media (max-width: 950px) {
+
+    .navlinks.mobile-open {
+        display: flex;
+
+        position: absolute;
+
+        top: 70px;
+        left: 10px;
+        right: 10px;
+
+        flex-direction: column;
+
+        gap: 4px;
+
+        background: #ffffff;
+
+        padding: 12px;
+
+        border-radius: 14px;
+
+        border: 1px solid #e7ebf0;
+
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+
+        z-index: 9999;
+    }
+
+    .navlinks.mobile-open a {
+        display: block;
+
+        width: 100%;
+
+        padding: 13px 15px;
+
+        border-radius: 9px;
+
+        color: #4b5563;
+
+        font-weight: 600;
+    }
+
+    .navlinks.mobile-open a:hover {
+        background: #f2f6ff;
+        color: #2563eb;
+    }
+
+}
+
+
+/* =========================================
+   PHONE
+========================================= */
+
+@media (max-width: 650px) {
+
+    .nav {
+        height: 60px;
+        padding: 0 15px;
+    }
+
+    .brand {
+        font-size: 18px;
+    }
+
+    .mobile-menu-btn {
+        font-size: 28px;
+    }
+
+    .navlinks.mobile-open {
+        top: 60px;
+    }
+
+    .container {
+        padding: 20px 12px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .grid2 {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        display: block;
+    }
+
+    .quick {
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .quick a,
+    .quick button {
+        width: 100%;
+    }
+
+    .formgrid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters {
+        grid-template-columns: 1fr;
+    }
+
+    .inlineform {
+        grid-template-columns: 1fr;
+    }
+
+    .authcard {
+        padding: 24px 18px;
+    }
+
+    .tablewrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+}
