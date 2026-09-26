@@ -169,8 +169,7 @@ def login():
 @app.route("/logout")
 def logout(): session.clear(); flash("Logged out successfully.","success"); return redirect(url_for("login"))
 
-@app.route("/dashboard")
-@login_required
+
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -331,7 +330,7 @@ def dashboard():
 
         suggestions=suggestions
     )
-    return render_template("dashboard.html",income=income,expense=expense,balance=income-expense,budget=budget,used=used,recent=recent,month=m,year=y,recommended=recommended,savings_target=savings_target,daily_guide=daily_guide)
+    
 
 def save_transaction(kind):
     amount=request.form.get("amount",""); d=request.form.get("transaction_date","")
@@ -489,18 +488,62 @@ def seed_demo():
 @app.route("/reports")
 @login_required
 def reports():
-    m=int(request.args.get("month",date.today().month)); y=int(request.args.get("year",date.today().year))
-    income,expense=totals(session["user_id"],m,y); conn=get_db()
-    cats=conn.execute("""SELECT category,SUM(amount) total FROM transactions WHERE user_id=? AND type='expense'
-    AND strftime('%m',transaction_date)=? AND strftime('%Y',transaction_date)=? GROUP BY category ORDER BY total DESC""",
-    (session["user_id"],f"{m:02d}",str(y))).fetchall(); conn.close()
-    return render_template("reports.html",month=m,year=y,income=income,expense=expense,savings=income-expense,cats=cats)
+    m = int(request.args.get("month", date.today().month))
+    y = int(request.args.get("year", date.today().year))
+
+    income, expense = totals(session["user_id"], m, y)
+
+    conn = get_db()
+
+    cats = conn.execute("""
+        SELECT category, SUM(amount) total
+        FROM transactions
+        WHERE user_id = ?
+        AND type = 'expense'
+        AND strftime('%m', transaction_date) = ?
+        AND strftime('%Y', transaction_date) = ?
+        GROUP BY category
+        ORDER BY total DESC
+    """, (
+        session["user_id"],
+        f"{m:02d}",
+        str(y)
+    )).fetchall()
+
+    # Get monthly budget
+    budget_row = conn.execute("""
+        SELECT amount
+        FROM budgets
+        WHERE user_id = ?
+        AND month = ?
+        AND year = ?
+    """, (
+        session["user_id"],
+        m,
+        y
+    )).fetchone()
+
+    conn.close()
+
+    budget = float(budget_row["amount"]) if budget_row else 0
+
+    return render_template(
+        "reports.html",
+        month=m,
+        year=y,
+        income=income,
+        expense=expense,
+        savings=income - expense,
+        budget=budget,
+        cats=cats
+    )
 
 @app.route("/customer-support", methods=["GET", "POST"])
 @login_required
 def customer_support():
 
     if request.method == "POST":
+
         subject = request.form.get("subject", "").strip()
         category = request.form.get("category", "").strip()
         message = request.form.get("message", "").strip()
@@ -529,7 +572,7 @@ def customer_support():
         return redirect(url_for("my_tickets"))
 
     return render_template("customer_support.html")
-
+    
 @app.route("/admin/support")
 @admin_required
 def admin_support():

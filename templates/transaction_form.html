@@ -1,19 +1,226 @@
 {% extends "base.html" %}
-{% block title %}{{"Edit" if transaction else "Add"}} {{mode|title}}{% endblock %}
-{% block content %}
-<main class="container narrow"><section class="panel">
-<h1>{{"Edit" if transaction else "Add"}} {{mode|title}}</h1>
-<form method="post" class="formgrid">
-<div><label>Amount (₹)</label><input name="amount" type="number" step="0.01" min="0.01" required value="{{transaction['amount'] if transaction else ''}}"></div>
-<div><label>Date</label><input name="transaction_date" type="date" required value="{{today}}"></div>
-{% if mode=="expense" %}
-<div><label>Category</label><select name="category" required>{% for c in categories %}<option {% if transaction and transaction['category']==c %}selected{% endif %}>{{c}}</option>{% endfor %}</select></div>
-<div><label>Payment Method</label><select name="payment_method">{% for p in payment_methods %}<option {% if transaction and transaction['payment_method']==p %}selected{% endif %}>{{p}}</option>{% endfor %}</select></div>
+
+{% block title %}
+
+{% if mode == "expense" %}
+Add Expense
 {% else %}
-<div class="fullrow"><label>Income Source</label><input name="source" required value="{{transaction['source'] if transaction else ''}}" placeholder="Salary, Freelance, etc."></div>
+Add Income
 {% endif %}
-<div class="fullrow"><label>Description</label><textarea name="description" rows="4">{{transaction['description'] if transaction else ''}}</textarea></div>
-<div class="fullrow"><button class="primary">{{"Update" if transaction else "Save"}} {{mode|title}}</button> <a class="secondary" href="{{url_for('transactions')}}">Cancel</a></div>
-</form>
-</section></main>
+
+· SpendTrack
+
+{% endblock %}
+
+
+{% block content %}
+
+<main class="container narrow">
+
+    <section class="panel">
+
+        {% if mode == "expense" %}
+
+        <p class="eyebrow">
+            MONEY OUT
+        </p>
+
+        <h1>🍔 Add Expense</h1>
+
+        <p class="muted">
+            Record your spending and keep your budget under control.
+        </p>
+
+        {% else %}
+
+        <p class="eyebrow">
+            MONEY IN
+        </p>
+
+        <h1>💵 Add Income</h1>
+
+        <p class="muted">
+            Record your salary or other income.
+        </p>
+
+        {% endif %}
+
+
+        <form method="post">
+
+            <div class="formgrid">
+
+
+                <div>
+
+                    <label>
+                        Amount
+                    </label>
+
+                    <input
+                        type="number"
+                        name="amount"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="₹ 0.00"
+                        value="{{ transaction['amount'] if transaction else '' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label>
+                        Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="transaction_date"
+                        value="{{ transaction['transaction_date'] if transaction else today }}"
+                        required
+                    >
+
+                </div>
+
+
+                {% if mode == "expense" %}
+
+                <div>
+
+                    <label>
+                        Category
+                    </label>
+
+                    <select name="category" required>
+
+                        <option value="">
+                            Select category
+                        </option>
+
+                        {% for cat in categories %}
+
+                        <option
+                            value="{{ cat }}"
+                            {% if transaction and transaction['category'] == cat %}
+                            selected
+                            {% endif %}
+                        >
+
+                            {{ cat }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label>
+                        Payment Method
+                    </label>
+
+                    <select name="payment_method">
+
+                        <option value="">
+                            Select payment method
+                        </option>
+
+                        {% for method in payment_methods %}
+
+                        <option
+                            value="{{ method }}"
+                            {% if transaction and transaction['payment_method'] == method %}
+                            selected
+                            {% endif %}
+                        >
+
+                            {{ method }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                {% else %}
+
+                <div class="fullrow">
+
+                    <label>
+                        Income Source
+                    </label>
+
+                    <input
+                        type="text"
+                        name="source"
+                        placeholder="Example: Salary, Freelance, Bonus"
+                        value="{{ transaction['source'] if transaction else '' }}"
+                        required
+                    >
+
+                </div>
+
+                {% endif %}
+
+
+                <div class="fullrow">
+
+                    <label>
+                        Description
+                    </label>
+
+                    <textarea
+                        name="description"
+                        rows="4"
+                        placeholder="Add a note (optional)"
+                    >{{ transaction['description'] if transaction else '' }}</textarea>
+
+                </div>
+
+            </div>
+
+
+            <div style="display:flex;gap:10px;margin-top:24px;">
+
+                <button
+                    type="submit"
+                    class="primary">
+
+                    {% if editing %}
+                        💾 Update
+                    {% elif mode == "expense" %}
+                        ➕ Save Expense
+                    {% else %}
+                        💰 Save Income
+                    {% endif %}
+
+                </button>
+
+
+                <a
+                    href="{{ url_for('transactions') }}"
+                    class="secondary">
+
+                    Cancel
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </section>
+
+</main>
+
 {% endblock %}

@@ -1,7 +1,330 @@
-{% extends "base.html" %}{% block title %}Dashboard{% endblock %}
-{% block content %}<main class="container"><div class="hero"><div><p class="eyebrow">MONTHLY OVERVIEW</p><h1>Hello, {{session['user_name']}} 👋</h1><p class="muted">Your financial snapshot for {{month}}/{{year}}.</p></div><div class="quick"><a class="primary" href="{{url_for('add_expense')}}">+ Expense</a><a class="secondary" href="{{url_for('add_income')}}">+ Income</a></div></div>
-<div class="cards"><div class="card"><span>Total Income</span><strong class="green">₹{{'%.2f'|format(income)}}</strong><small>This month</small></div><div class="card"><span>Total Expenses</span><strong class="red">₹{{'%.2f'|format(expense)}}</strong><small>This month</small></div><div class="card"><span>Remaining Balance</span><strong>₹{{'%.2f'|format(balance)}}</strong><small>Income − Expenses</small></div><div class="card"><span>Monthly Budget</span><strong>₹{{'%.2f'|format(budget)}}</strong><small>{{'%.0f'|format(used)}}% used</small></div></div>
-<div class="grid2"><section class="panel"><h2>Budget Progress</h2><div class="progress"><div style="width:{{used}}%"></div></div><p class="muted">{{'%.0f'|format(used)}}% of saved budget used.</p>{% if budget and expense >= budget %}<div class="alert">⚠️ Budget limit reached.</div>{% elif budget and used >= 80 %}<div class="warning">⚠️ You have used most of your saved budget.</div>{% endif %}
-<h2 style="margin-top:24px">🧠 Smart Budget Guide</h2><div class="tx"><span>Recommended spending</span><b>₹{{'%.2f'|format(recommended)}}</b></div><div class="tx"><span>Savings target</span><b class="green">₹{{'%.2f'|format(savings_target)}}</b></div><div class="tx"><span>Daily spending guide</span><b>₹{{'%.2f'|format(daily_guide)}}</b></div><p class="muted">This is a planning guide based on recorded income and expenses.</p>
-<div class="actions"><a class="action" href="{{url_for('add_expense')}}">🍔 Add Expense</a><a class="action" href="{{url_for('add_income')}}">💵 Add Income</a><a class="action" href="{{url_for('budget')}}">🎯 Smart Budget</a><a class="action" href="{{url_for('reports')}}">📊 View Reports</a><a class="action" href="{{url_for('help_page')}}">🆘 Help</a></div><form method="post" action="{{url_for('seed_demo')}}" style="margin-top:12px"><button class="secondary full">Add Demo Data</button></form></section>
-<section class="panel"><h2>Recent Transactions</h2>{% for t in recent %}<div class="tx"><div><b>{{t['category'] or t['source']}}</b><small>{{t['transaction_date']}} · {{t['description'] or 'No description'}}</small></div><b class="{{'green' if t['type']=='income' else 'red'}}">{{'+' if t['type']=='income' else '-'}}₹{{'%.2f'|format(t['amount'])}}</b></div>{% else %}<div class="empty">No transactions yet.</div>{% endfor %}</section></div></main>{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard
+{% endblock %}
+
+
+{% block content %}
+
+<main class="container">
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+        <div>
+
+            <p class="eyebrow">
+                MONTHLY OVERVIEW
+            </p>
+
+            <h1>
+                Hello, {{ session["user_name"] }} 👋
+            </h1>
+
+            <p class="muted">
+                Here's your financial snapshot for
+                {{ month }}/{{ year }}.
+            </p>
+
+        </div>
+
+
+        <div class="quick">
+
+            <a class="primary"
+               href="{{ url_for('add_expense') }}">
+                + Add Expense
+            </a>
+
+            <a class="secondary"
+               href="{{ url_for('add_income') }}">
+                + Add Income
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- SUMMARY CARDS -->
+
+    <section class="cards">
+
+        <div class="card">
+
+            <span>💰 Total Income</span>
+
+            <strong class="green">
+                ₹{{ "%.2f"|format(income) }}
+            </strong>
+
+            <small>
+                This month
+            </small>
+
+        </div>
+
+
+        <div class="card">
+
+            <span>🔴 Total Expenses</span>
+
+            <strong class="red">
+                ₹{{ "%.2f"|format(expense) }}
+            </strong>
+
+            <small>
+                This month
+            </small>
+
+        </div>
+
+
+        <div class="card">
+
+            <span>💵 Remaining Balance</span>
+
+            <strong>
+                ₹{{ "%.2f"|format(balance) }}
+            </strong>
+
+            <small>
+                Income − Expenses
+            </small>
+
+        </div>
+
+
+        <div class="card">
+
+            <span>🎯 Monthly Budget</span>
+
+            <strong>
+                ₹{{ "%.2f"|format(budget) }}
+            </strong>
+
+            <small>
+                {{ "%.0f"|format(used) }}% used
+            </small>
+
+        </div>
+
+    </section>
+
+
+    <!-- MAIN GRID -->
+
+    <section class="grid2">
+
+
+        <!-- LEFT PANEL -->
+
+        <section class="panel">
+
+            <h2>
+                🎯 Budget Progress
+            </h2>
+
+            <div class="progress">
+
+                <div style="width: {{ used }}%"></div>
+
+            </div>
+
+            <p class="muted">
+
+                {{ "%.0f"|format(used) }}%
+                of your saved budget used.
+
+            </p>
+
+
+            {% if budget and expense >= budget %}
+
+            <div class="alert">
+                ⚠️ You have reached your budget limit.
+            </div>
+
+            {% elif budget and used >= 80 %}
+
+            <div class="warning">
+                ⚠️ You have used most of your budget.
+            </div>
+
+            {% endif %}
+
+
+            <!-- SMART GUIDE -->
+
+            <h2 style="margin-top:28px;">
+                🧠 Smart Budget Guide
+            </h2>
+
+
+            <div class="tx">
+
+                <span>
+                    Recommended spending
+                </span>
+
+                <b>
+                    ₹{{ "%.2f"|format(recommended) }}
+                </b>
+
+            </div>
+
+
+            <div class="tx">
+
+                <span>
+                    💰 Savings target
+                </span>
+
+                <b class="green">
+                    ₹{{ "%.2f"|format(savings_target) }}
+                </b>
+
+            </div>
+
+
+            <div class="tx">
+
+                <span>
+                    📅 Daily spending guide
+                </span>
+
+                <b>
+                    ₹{{ "%.2f"|format(daily_guide) }}
+                </b>
+
+            </div>
+
+
+            <p class="muted">
+
+                Your guide is calculated from your
+                recorded income and expenses.
+
+            </p>
+
+
+            <!-- QUICK ACTIONS -->
+
+            <h2 style="margin-top:28px;">
+                ⚡ Quick Actions
+            </h2>
+
+
+            <div class="actions">
+
+                <a class="action"
+                   href="{{ url_for('add_expense') }}">
+                    🍔 Add Expense
+                </a>
+
+                <a class="action"
+                   href="{{ url_for('add_income') }}">
+                    💵 Add Income
+                </a>
+
+                <a class="action"
+                   href="{{ url_for('budget') }}">
+                    🎯 Smart Budget
+                </a>
+
+                <a class="action"
+                   href="{{ url_for('reports') }}">
+                    📊 View Reports
+                </a>
+
+                <a class="action"
+                   href="{{ url_for('help_page') }}">
+                    🆘 Help
+                </a>
+
+            </div>
+
+
+            <form
+                method="post"
+                action="{{ url_for('seed_demo') }}"
+                style="margin-top:15px;">
+
+                <button class="secondary full">
+                    ✨ Add Demo Data
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <!-- RIGHT PANEL -->
+
+        <section class="panel">
+
+            <h2>
+                🧾 Recent Transactions
+            </h2>
+
+
+            {% for t in recent %}
+
+            <div class="tx">
+
+                <div>
+
+                    <b>
+                        {{ t["category"] or t["source"] }}
+                    </b>
+
+                    <small>
+                        {{ t["transaction_date"] }}
+                        ·
+                        {{ t["description"] or "No description" }}
+                    </small>
+
+                </div>
+
+
+                <b class="{{ 'green' if t['type'] == 'income' else 'red' }}">
+
+                    {{ '+' if t['type'] == 'income' else '-' }}
+
+                    ₹{{ "%.2f"|format(t["amount"]) }}
+
+                </b>
+
+            </div>
+
+
+            {% else %}
+
+            <div class="empty">
+
+                <div style="font-size:40px;">
+                    🧾
+                </div>
+
+                <p>
+                    No transactions yet.
+                </p>
+
+                <small>
+                    Add your first income or expense
+                    to start tracking.
+                </small>
+
+            </div>
+
+            {% endfor %}
+
+        </section>
+
+    </section>
+
+</main>
+
+{% endblock %}

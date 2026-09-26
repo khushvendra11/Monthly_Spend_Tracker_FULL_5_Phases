@@ -1,13 +1,20 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{% block title %}SpendTrack{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}SpendTrack{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
+
 {% if logged_in and request.endpoint not in ['login', 'register'] %}
 
 <nav class="nav">
@@ -16,44 +23,56 @@
         💰 SpendTrack
     </a>
 
-    <!-- Mobile three-dot menu -->
     <button
         class="mobile-menu-btn"
         onclick="toggleMobileMenu()"
-        aria-label="Open menu"
-    >
+        aria-label="Open menu">
         ⋮
     </button>
 
     <div class="navlinks" id="mainNav">
 
-        <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+        <a href="{{ url_for('dashboard') }}">
+            🏠 Dashboard
+        </a>
 
-        <a href="{{ url_for('transactions') }}">💳 Transactions</a>
+        <a href="{{ url_for('transactions') }}">
+            💳 Transactions
+        </a>
 
-        <a href="{{ url_for('budget') }}">💰 Budget</a>
+        <a href="{{ url_for('budget') }}">
+            🎯 Budget
+        </a>
 
-        <a href="{{ url_for('reports') }}">📊 Reports</a>
+        <a href="{{ url_for('reports') }}">
+            📊 Reports
+        </a>
 
-        <a href="{{ url_for('categories') }}">🗂 Categories</a>
+        <a href="{{ url_for('categories') }}">
+            🗂️ Categories
+        </a>
 
-        <a href="{{ url_for('profile') }}">👤 Profile</a>
+        <a href="{{ url_for('profile') }}">
+            👤 Profile
+        </a>
 
-        <a href="{{ url_for('help_page') }}">❓ Help</a>
+        <a href="{{ url_for('help_page') }}">
+            ❓ Help
+        </a>
 
         <a href="{{ url_for('customer_support') }}">
-            🎧 Customer Support
+            💬 Support
         </a>
 
         <a href="{{ url_for('my_tickets') }}">
-            💬 My Tickets
+            🎫 My Tickets
         </a>
 
         {% if session.get("user_email") == "khushvendrasingh2006@gmail.com" %}
 
-            <a href="{{ url_for('admin_support') }}">
-                🛠️ Admin Support
-            </a>
+        <a href="{{ url_for('admin_support') }}">
+            🛠️ Admin
+        </a>
 
         {% endif %}
 
@@ -65,13 +84,30 @@
 
 </nav>
 
-</nav>
-
 {% endif %}
-{% with messages=get_flashed_messages(with_categories=true) %}
-<div class="flashwrap">{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}</div>
+
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+<div class="flashwrap">
+
+    {% for cat, msg in messages %}
+
+    <div class="flash {{ cat }}">
+        {{ msg }}
+    </div>
+
+    {% endfor %}
+
+</div>
+
 {% endwith %}
-{% block content %}{% endblock %}
+
+
+{% block content %}
+{% endblock %}
+
+
 <script>
 
 function toggleMobileMenu() {
@@ -83,5 +119,7 @@ function toggleMobileMenu() {
 }
 
 </script>
+
 </body>
+
 </html>

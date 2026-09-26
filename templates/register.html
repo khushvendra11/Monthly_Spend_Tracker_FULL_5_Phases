@@ -1,14 +1,106 @@
-{% extends "base.html" %}{% block title %}Register{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Create Account · SpendTrack{% endblock %}
+
 {% block content %}
-<div class="auth"><div class="authcard">
-<div class="logo-big">💰 SpendTrack</div><h1>Create Account</h1>
-<form method="post">
-<label>Full Name</label><input name="name" required placeholder="Your name">
-<label>Email</label><input name="email" type="email" required placeholder="you@example.com">
-<label>Password</label><input name="password" type="password" minlength="6" required>
-<label>Confirm Password</label><input name="confirm_password" type="password" minlength="6" required>
-<button class="primary full">Create Account</button>
-</form>
-<p class="center muted">Already registered? <a href="{{url_for('login')}}">Login</a></p>
-</div></div>
+
+<main class="auth">
+
+    <section class="authcard">
+
+        <div class="logo-big">
+            💰 SpendTrack
+        </div>
+
+        <p class="eyebrow center">
+            GET STARTED
+        </p>
+
+        <h1>
+            Create your account
+        </h1>
+
+        <p class="muted center">
+            Start managing your money smarter.
+        </p>
+
+
+        <form method="post">
+
+            <label for="name">
+                Full Name
+            </label>
+
+            <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Enter your name"
+                required
+            >
+
+
+            <label for="email">
+                Email Address
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+            >
+
+
+            <label for="password">
+                Password
+            </label>
+
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Minimum 6 characters"
+                required
+            >
+
+
+            <label for="confirm_password">
+                Confirm Password
+            </label>
+
+            <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                placeholder="Re-enter your password"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="primary full"
+                style="margin-top:20px;">
+                🚀 Create Account
+            </button>
+
+        </form>
+
+
+        <p class="center" style="margin-top:22px;">
+
+            Already have an account?
+
+            <a href="{{ url_for('login') }}">
+                Login
+            </a>
+
+        </p>
+
+    </section>
+
+</main>
+
 {% endblock %}

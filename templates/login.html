@@ -1,13 +1,92 @@
-{% extends "base.html" %}{% block title %}Login{% endblock %}
+{% extends "base.html" %}
+
 {% block content %}
-<div class="auth"><div class="authcard">
-<div class="logo-big">💰 SpendTrack</div>
-<h1>Welcome Back</h1><p class="muted">Your personal monthly finance tracker.</p>
-<form method="post">
-<label>Email</label><input name="email" type="email" required placeholder="you@example.com">
-<label>Password</label><input name="password" type="password" required placeholder="Password">
-<button class="primary full">Login</button>
-</form>
-<p class="center muted">Don't have an account? <a href="{{url_for('register')}}">Create one</a></p>
-</div></div>
+
+<div class="auth-wrapper">
+
+    <div class="authcard monkey-login">
+
+        <!-- Monkey -->
+        <div class="monkey" id="monkey">
+
+            <div class="ears ear-left"></div>
+            <div class="ears ear-right"></div>
+
+            <div class="monkey-head">
+
+                <div class="hair"></div>
+
+                <div class="eyes">
+                    <div class="eye eye-left">
+                        <span></span>
+                    </div>
+
+                    <div class="eye eye-right">
+                        <span></span>
+                    </div>
+                </div>
+
+                <div class="nose">
+                    <span></span>
+                </div>
+
+                <div class="mouth"></div>
+
+            </div>
+        </div>
+
+        <h1>Welcome Back 👋</h1>
+        <p class="auth-subtitle">Login to your SpendTrack account</p>
+
+        <form method="POST">
+
+            <label>Email</label>
+            <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+            >
+
+            <label>Password</label>
+            <input
+                type="password"
+                name="password"
+                id="password"
+                placeholder="Enter your password"
+                required
+            >
+
+            <button type="submit" class="primary auth-btn">
+                Login
+            </button>
+
+        </form>
+
+        <p class="auth-footer">
+            Don't have an account?
+            <a href="{{ url_for('register') }}">Create Account</a>
+        </p>
+
+    </div>
+
+</div>
+
+<script>
+const passwordInput = document.getElementById("password");
+const monkey = document.getElementById("monkey");
+
+passwordInput.addEventListener("focus", function () {
+    monkey.classList.add("eyes-closed");
+});
+
+passwordInput.addEventListener("input", function () {
+    monkey.classList.add("eyes-closed");
+});
+
+passwordInput.addEventListener("blur", function () {
+    monkey.classList.remove("eyes-closed");
+});
+</script>
+
 {% endblock %}
