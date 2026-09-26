@@ -210,3 +210,209 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #d5dbe4;border-ra
     }
 
 }
+/* =========================================
+   SMART SALARY PLAN
+========================================= */
+
+.smart-plan {
+    margin-bottom: 22px;
+    background: linear-gradient(
+        135deg,
+        #ffffff,
+        #f5f8ff
+    );
+}
+
+
+.smart-plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+
+.salary-display {
+    background: #2563eb;
+    color: white;
+    padding: 15px 22px;
+    border-radius: 14px;
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+}
+
+
+.salary-display small {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+    opacity: .9;
+}
+
+
+.salary-plan-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 14px;
+
+    margin-top: 22px;
+}
+
+
+.salary-plan-card {
+    padding: 18px;
+
+    border-radius: 14px;
+
+    background: white;
+
+    border: 1px solid #e7ebf0;
+}
+
+
+.salary-plan-card span {
+    display: block;
+
+    color: #687386;
+
+    font-size: 14px;
+
+    margin-top: 8px;
+}
+
+
+.salary-plan-card strong {
+    display: block;
+
+    font-size: 22px;
+
+    margin: 8px 0;
+}
+
+
+.salary-plan-card small {
+    color: #7b8494;
+}
+
+
+.plan-icon {
+    font-size: 25px;
+}
+
+
+.salary-plan-card.needs {
+    border-left: 4px solid #2563eb;
+}
+
+
+.salary-plan-card.wants {
+    border-left: 4px solid #9333ea;
+}
+
+
+.salary-plan-card.savings {
+    border-left: 4px solid #16a34a;
+}
+
+
+.salary-plan-card.emergency {
+    border-left: 4px solid #f97316;
+}
+
+
+/* =========================================
+   SMART SUGGESTIONS
+========================================= */
+
+.suggestions {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    margin-top: 18px;
+}
+
+
+.suggestion {
+    padding: 13px 15px;
+
+    background: #f2f6ff;
+
+    border-radius: 10px;
+
+    color: #374151;
+
+    font-weight: 600;
+
+    line-height: 1.5;
+}
+
+
+.salary-empty {
+    text-align: center;
+
+    padding: 25px 10px;
+}
+
+
+.salary-empty > div {
+    font-size: 40px;
+
+    margin-bottom: 8px;
+}
+
+
+.salary-empty h3 {
+    margin-bottom: 6px;
+}
+
+
+/* =========================================
+   SMART PLAN MOBILE
+========================================= */
+
+@media (max-width: 950px) {
+
+    .salary-plan-grid {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .smart-plan-header {
+        display: block;
+    }
+
+
+    .salary-display {
+        margin-top: 15px;
+
+        width: 100%;
+    }
+
+
+    .salary-plan-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .salary-plan-card {
+        padding: 16px;
+    }
+
+
+    .suggestion {
+        font-size: 14px;
+    }
+
+}

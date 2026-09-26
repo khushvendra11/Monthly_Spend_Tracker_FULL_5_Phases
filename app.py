@@ -171,14 +171,166 @@ def logout(): session.clear(); flash("Logged out successfully.","success"); retu
 
 @app.route("/dashboard")
 @login_required
+@app.route("/dashboard")
+@login_required
 def dashboard():
-    m,y=date.today().month,date.today().year; income,expense=totals(session["user_id"],m,y)
-    conn=get_db()
-    b=conn.execute("SELECT amount FROM budgets WHERE user_id=? AND month=? AND year=?",(session["user_id"],m,y)).fetchone()
-    recent=conn.execute("SELECT * FROM transactions WHERE user_id=? ORDER BY transaction_date DESC,id DESC LIMIT 6",(session["user_id"],)).fetchall()
-    conn.close(); budget=float(b["amount"]) if b else 0; used=min(expense/budget*100,100) if budget else 0
-    recommended=income*0.80; savings_target=income*0.20; days_left=max(calendar.monthrange(y,m)[1]-date.today().day+1,1) if (m,y)==(date.today().month,date.today().year) else calendar.monthrange(y,m)[1]
-    daily_guide=max(recommended-expense,0)/days_left if days_left else 0
+
+    m, y = date.today().month, date.today().year
+
+    income, expense = totals(
+        session["user_id"],
+        m,
+        y
+    )
+
+    conn = get_db()
+
+    b = conn.execute("""
+        SELECT amount
+        FROM budgets
+        WHERE user_id = ?
+        AND month = ?
+        AND year = ?
+    """, (
+        session["user_id"],
+        m,
+        y
+    )).fetchone()
+
+    recent = conn.execute("""
+        SELECT *
+        FROM transactions
+        WHERE user_id = ?
+        ORDER BY transaction_date DESC, id DESC
+        LIMIT 6
+    """, (
+        session["user_id"],
+    )).fetchall()
+
+    conn.close()
+
+    budget = float(b["amount"]) if b else 0
+
+    used = min(
+        expense / budget * 100,
+        100
+    ) if budget else 0
+
+
+    # =====================================
+    # SMART SALARY PLAN
+    # =====================================
+
+    needs_amount = income * 0.50
+    wants_amount = income * 0.20
+    savings_amount = income * 0.20
+    emergency_amount = income * 0.10
+
+
+    # =====================================
+    # SPENDING GUIDE
+    # =====================================
+
+    recommended = income * 0.80
+
+    savings_target = income * 0.20
+
+    days_left = max(
+        calendar.monthrange(y, m)[1]
+        - date.today().day
+        + 1,
+        1
+    )
+
+    daily_guide = max(
+        recommended - expense,
+        0
+    ) / days_left
+
+
+    # =====================================
+    # SMART SUGGESTIONS
+    # =====================================
+
+    suggestions = []
+
+    if income <= 0:
+
+        suggestions.append(
+            "💡 Add your monthly salary or income "
+            "to generate your personalized plan."
+        )
+
+    else:
+
+        suggestions.append(
+            f"🏠 Try to keep your essential expenses "
+            f"around ₹{needs_amount:,.0f}."
+        )
+
+        suggestions.append(
+            f"💰 Try to save around "
+            f"₹{savings_amount:,.0f} this month."
+        )
+
+        suggestions.append(
+            f"🎉 Your suggested flexible spending "
+            f"limit is ₹{wants_amount:,.0f}."
+        )
+
+        suggestions.append(
+            f"🚨 Keep around ₹{emergency_amount:,.0f} "
+            f"as an emergency reserve."
+        )
+
+        if expense > needs_amount:
+
+            suggestions.append(
+                "⚠️ Your current spending is higher "
+                "than the suggested essential limit."
+            )
+
+        if savings_amount > 0 and income - expense < savings_amount:
+
+            suggestions.append(
+                "📉 Your current remaining balance is "
+                "below the suggested savings target."
+            )
+
+        if expense == 0:
+
+            suggestions.append(
+                "🌟 No expenses recorded yet. "
+                "Start tracking your spending to get "
+                "more personalized suggestions."
+            )
+
+
+    return render_template(
+        "dashboard.html",
+
+        income=income,
+        expense=expense,
+        balance=income - expense,
+
+        budget=budget,
+        used=used,
+
+        recent=recent,
+
+        month=m,
+        year=y,
+
+        recommended=recommended,
+        savings_target=savings_target,
+        daily_guide=daily_guide,
+
+        needs_amount=needs_amount,
+        wants_amount=wants_amount,
+        emergency_amount=emergency_amount,
+
+        suggestions=suggestions
+    )
     return render_template("dashboard.html",income=income,expense=expense,balance=income-expense,budget=budget,used=used,recent=recent,month=m,year=y,recommended=recommended,savings_target=savings_target,daily_guide=daily_guide)
 
 def save_transaction(kind):
