@@ -10,9 +10,7 @@ import os
 from openai import OpenAI
 
 app = Flask(__name__)
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY")
-)
+
 ADMIN_EMAIL = "khushvendrasingh2006@gmail.com"
 app.secret_key = "change-this-secret-key"
 DATABASE = "database.db"
@@ -1248,6 +1246,7 @@ client = OpenAI(
 def ai_chat():
 
     try:
+
         data = request.get_json()
         question = data.get("question", "").strip()
 
@@ -1255,6 +1254,15 @@ def ai_chat():
             return jsonify({
                 "answer": "Please ask me something."
             })
+
+        api_key = os.environ.get("OPENAI_API_KEY")
+
+        if not api_key:
+            return jsonify({
+                "answer": "AI is currently unavailable because the AI API key is not configured."
+            }), 503
+
+        client = OpenAI(api_key=api_key)
 
         response = client.responses.create(
             model="gpt-5.6-luna",
