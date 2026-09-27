@@ -1,0 +1,238 @@
+@app.route("/api/ai-chat", methods=["POST"])
+@login_required
+def ai_chat():
+
+    try:
+
+        data = request.get_json()
+
+        question = data.get("question", "").strip()
+
+        if not question:
+
+            return jsonify({
+                "answer": "Please ask me something."
+            })
+
+
+        uid = session["user_id"]
+
+        conn = get_db()
+
+        today = date.today()
+
+        month = today.month
+        year = today.year
+
+
+        # ==============================
+        # GET USER FINANCIAL DATA
+        # ==============================
+
+        income, expense = totals(
+            uid,
+            month,
+            year
+        )
+
+
+        # Budget
+
+        budget_row = conn.execute(
+            """
+            SELECT amount
+            FROM budgets
+            WHERE user_id=?
+            AND month=?
+            AND year=?
+            """,
+            (
+                uid,
+                month,
+                year
+            )
+        ).fetchone()
+
+
+        budget = (
+            float(budget_row["amount"])
+            if budget_row
+            else 0
+        )
+
+
+        # Category spending
+
+        category_rows = conn.execute(
+            """
+            SELECT
+                category,
+                SUM(amount) AS total
+            FROM transactions
+
+            WHERE user_id=?
+            AND type='expense'
+
+            AND strftime(
+                '%m',
+                transaction_date
+            )=?
+
+            AND strftime(
+                '%Y',
+                transaction_date
+            )=?
+
+            GROUP BY category
+
+            ORDER BY total DESC
+            """,
+            (
+                uid,
+                f"{month:02d}",
+                str(year)
+            )
+        ).fetchall()
+
+
+        category_data = []
+
+        for row in category_rows:
+
+            category_data.append(
+                f"{row['category']}: "
+                f"₹{float(row['total']):.2f}"
+            )
+
+
+        # Recent transactions
+
+        transaction_rows = conn.execute(
+            """
+            SELECT
+                type,
+                amount,
+                category,
+                source,
+                description,
+                transaction_date
+
+            FROM transactions
+
+            WHERE user_id=?
+
+            ORDER BY
+                transaction_date DESC,
+                id DESC
+
+            LIMIT 30
+            """,
+            (uid,)
+        ).fetchall()
+
+
+        transaction_data = []
+
+        for row in transaction_rows:
+
+            transaction_data.append(
+                f"{row['transaction_date']} | "
+                f"{row['type']} | "
+                f"₹{float(row['amount']):.2f} | "
+                f"{row['category'] or row['source'] or ''} | "
+                f"{row['description'] or ''}"
+            )
+
+
+        conn.close()
+
+
+        balance = income - expense
+
+
+        # ==============================
+        # FINANCIAL CONTEXT FOR AI
+        # ==============================
+
+        financial_context = f"""
+
+You are SpendTrack AI, a helpful personal finance assistant
+inside a student's expense tracking website.
+
+You are answering the user's question using their actual
+financial information.
+
+Current date:
+{today}
+
+Current month:
+{month}/{year}
+
+Monthly income:
+₹{income:.2f}
+
+Monthly expenses:
+₹{expense:.2f}
+
+Current balance:
+₹{balance:.2f}
+
+Monthly budget:
+₹{budget:.2f}
+
+Category spending:
+{", ".join(category_data) if category_data else "No category data"}
+
+Recent transactions:
+{"\n".join(transaction_data) if transaction_data else "No transactions"}
+
+Important rules:
+
+1. Answer the user's actual question directly.
+2. Do NOT use predefined answers.
+3. Use the financial data above whenever relevant.
+4. If the question is unrelated to personal finance,
+   you can still answer normally.
+5. Never invent transactions, income, expenses or budgets.
+6. If information is missing, clearly say that it is missing.
+7. Give practical and easy-to-understand answers.
+8. Use Indian Rupees (₹) when discussing this user's money.
+9. Do calculations when necessary.
+10. Do not claim to have performed an action that you did not perform.
+11. For financial decisions, explain assumptions and avoid presenting
+    uncertain recommendations as guaranteed outcomes.
+"""
+
+
+        # ==============================
+        # CALL REAL AI
+        # ==============================
+
+        response = client.responses.create(
+
+            model="gpt-5.6-luna",
+
+            instructions=financial_context,
+
+            input=question
+
+        )
+
+
+        answer = response.output_text
+
+
+        return jsonify({
+            "answer": answer
+        })
+
+
+    except Exception as e:
+
+        print("AI ERROR:", e)
+
+        return jsonify({
+            "answer":
+            "Sorry, I couldn't connect to the AI right now. "
+            "Please check your AI configuration and try again."
+        }), 500

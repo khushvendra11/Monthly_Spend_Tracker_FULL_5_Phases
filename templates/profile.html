@@ -1,12 +1,148 @@
-{% extends "base.html" %}{% block title %}Profile{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
 {% block content %}
-<main class="container narrow"><section class="panel"><h1>👤 My Profile</h1><p class="muted">Update your account information and profile photo.</p>
-<form method="post" enctype="multipart/form-data">
-<div style="text-align:center;margin:18px 0">
-{% if user['profile_photo'] %}<img src="{{ url_for('static',filename='uploads/'+user['profile_photo']) }}" alt="Profile photo" style="width:120px;height:120px;border-radius:50%;object-fit:cover">{% else %}<div style="width:120px;height:120px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;background:#eee;font-size:48px">👤</div>{% endif %}
-</div>
-<label>Profile Photo</label><input type="file" name="profile_photo" accept=".png,.jpg,.jpeg,.webp">
-<label>Name</label><input name="name" value="{{user['name']}}" required>
-<label>Email</label><input name="email" type="email" value="{{user['email']}}" required>
-<button class="primary">Save Changes</button></form></section></main>
+
+<main class="container narrow">
+
+    <!-- PROFILE -->
+    <section class="panel">
+
+        <h1>👤 My Profile</h1>
+
+        <p class="muted">
+            Update your account information and profile photo.
+        </p>
+
+        <form method="post" enctype="multipart/form-data">
+
+            <div style="text-align:center;margin:18px 0">
+
+                {% if user['profile_photo'] %}
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/' + user['profile_photo']) }}"
+                        alt="Profile photo"
+                        style="width:120px;height:120px;border-radius:50%;object-fit:cover"
+                    >
+
+                {% else %}
+
+                    <div style="
+                        width:120px;
+                        height:120px;
+                        border-radius:50%;
+                        margin:auto;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        background:#eee;
+                        font-size:48px;
+                    ">
+                        👤
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+            <label>Profile Photo</label>
+
+            <input
+                type="file"
+                name="profile_photo"
+                accept=".png,.jpg,.jpeg,.webp"
+            >
+
+            <label>Name</label>
+
+            <input
+                name="name"
+                value="{{ user['name'] }}"
+                required
+            >
+
+            <label>Username</label>
+
+            <input
+                value="@{{ user['username'] }}"
+                readonly
+                style="background:#f3f4f6;cursor:not-allowed;"
+            >
+
+            <label>Email</label>
+
+            <input
+                name="email"
+                type="email"
+                value="{{ user['email'] }}"
+                required
+            >
+
+            <button class="primary" type="submit">
+                Save Changes
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <!-- CHANGE PASSWORD -->
+    <section class="panel" style="margin-top:20px;">
+
+        <h2>🔐 Change Password</h2>
+
+        <p class="muted">
+            Update your account password securely.
+        </p>
+
+        <form
+            method="POST"
+            action="{{ url_for('change_password') }}"
+        >
+
+            <label>Current Password</label>
+
+            <input
+                type="password"
+                name="current_password"
+                placeholder="Enter current password"
+                required
+            >
+
+            <label>New Password</label>
+
+            <input
+                type="password"
+                name="new_password"
+                placeholder="Enter new password"
+                minlength="6"
+                required
+            >
+
+            <label>Confirm New Password</label>
+
+            <input
+                type="password"
+                name="confirm_password"
+                placeholder="Confirm new password"
+                minlength="6"
+                required
+            >
+
+            <button
+                type="submit"
+                class="primary"
+            >
+                🔒 Change Password
+            </button>
+
+        </form>
+
+    </section>
+
+</main>
+
 {% endblock %}

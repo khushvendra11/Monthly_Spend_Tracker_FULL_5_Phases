@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
@@ -6,8 +6,13 @@ from datetime import date
 from pathlib import Path
 from werkzeug.utils import secure_filename
 import calendar
+import os
+from openai import OpenAI
 
 app = Flask(__name__)
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY")
+)
 ADMIN_EMAIL = "khushvendrasingh2006@gmail.com"
 app.secret_key = "change-this-secret-key"
 DATABASE = "database.db"
@@ -24,99 +29,143 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-def init_db():
-    conn = get_db()
-    conn.executescript("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL, password TEXT NOT NULL,
-        profile_photo TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, name TEXT NOT NULL,
-        UNIQUE(user_id,name), FOREIGN KEY(user_id) REFERENCES users(id)
-    );
-    CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
-        type TEXT NOT NULL, amount REAL NOT NULL, category TEXT,
-        source TEXT, payment_method TEXT, description TEXT,
-        transaction_date TEXT NOT NULL,
-        FOREIGN KEY(user_id) REFERENCES users(id)
-    );
-    CREATE TABLE IF NOT EXISTS budgets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
-        month INTEGER NOT NULL, year INTEGER NOT NULL, amount REAL NOT NULL,
-        UNIQUE(user_id, month, year), FOREIGN KEY(user_id) REFERENCES users(id)
-    );
-    """)
-    # Upgrade older databases that were created before profile photos/categories.
-    cols = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
-    if "profile_photo" not in cols:
-        conn.execute("ALTER TABLE users ADD COLUMN profile_photo TEXT")
-    users = conn.execute("SELECT id FROM users").fetchall()
-    for u in users:
-        for name in CATEGORIES:
-            conn.execute("INSERT OR IGNORE INTO categories(user_id,name) VALUES(?,?)", (u["id"],name))
-    conn.execute("""
-CREATE TABLE IF NOT EXISTS support_tickets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    subject TEXT NOT NULL,
-    category TEXT NOT NULL,
-    message TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'Open',
-    admin_response TEXT DEFAULT '',
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id)
-)
-""")
-    conn.execute("""
-CREATE TABLE IF NOT EXISTS ticket_messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ticket_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
-    sender_type TEXT NOT NULL,
-    message TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(ticket_id) REFERENCES support_tickets(id),
-    FOREIGN KEY(user_id) REFERENCES users(id)
-)
-""")
-    conn.commit(); conn.close()
+def login_required(f):
 
-def login_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if "user_id" not in session: return redirect(url_for("login"))
-        return view(*args, **kwargs)
-    return wrapped
-
-def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
 
         if "user_id" not in session:
+            flash("Please login first.", "error")
             return redirect(url_for("login"))
 
-        conn = get_db()
+        return f(*args, **kwargs)
 
-        user = conn.execute("""
-            SELECT email
-            FROM users
-            WHERE id = ?
-        """, (session["user_id"],)).fetchone()
+    return decorated_function
 
-        conn.close()
+def admin_required(f):
 
-        if not user or user["email"] != ADMIN_EMAIL:
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+
+        if "user_id" not in session:
+            flash("Please login first.", "error")
+            return redirect(url_for("login"))
+
+        if session.get("user_email") != ADMIN_EMAIL:
             flash("Admin access required.", "error")
             return redirect(url_for("dashboard"))
 
         return f(*args, **kwargs)
 
     return decorated_function
+
+def init_db():
+
+    conn = get_db()
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            profile_photo TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cols = [
+        r["name"]
+        for r in conn.execute(
+            "PRAGMA table_info(users)"
+        ).fetchall()
+    ]
+
+    # Add profile_photo column to old databases
+    if "profile_photo" not in cols:
+        conn.execute(
+            "ALTER TABLE users ADD COLUMN profile_photo TEXT"
+        )
+
+    # Add username column to old databases
+    if "username" not in cols:
+        conn.execute(
+            "ALTER TABLE users ADD COLUMN username TEXT"
+        )
+
+    # Generate usernames for existing users
+    users = conn.execute(
+        """
+        SELECT id, name
+        FROM users
+        WHERE username IS NULL OR username = ''
+        """
+    ).fetchall()
+
+    for user in users:
+
+        base_username = (
+            user["name"]
+            .lower()
+            .replace(" ", "")
+        )
+
+        if not base_username:
+            base_username = f"user{user['id']}"
+
+        username = base_username
+        counter = 1
+
+        while conn.execute(
+            "SELECT id FROM users WHERE username=?",
+            (username,)
+        ).fetchone():
+
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        conn.execute(
+            "UPDATE users SET username=? WHERE id=?",
+            (username, user["id"])
+        )
+
+    conn.commit()
+    conn.close()
+
+
+def login():
+
+    if request.method == "POST":
+
+        identifier = request.form.get("identifier", "").strip().lower()
+        password = request.form.get("password", "")
+
+        conn = get_db()
+
+        user = conn.execute(
+            """
+            SELECT *
+            FROM users
+            WHERE LOWER(email)=?
+            OR LOWER(username)=?
+            """,
+            (identifier, identifier)
+        ).fetchone()
+
+        conn.close()
+
+        if user and check_password_hash(user["password"], password):
+
+            session["user_id"] = user["id"]
+            session["user_name"] = user["name"]
+            session["user_email"] = user["email"]
+            session["username"] = user["username"]
+
+            return redirect(url_for("dashboard"))
+
+        flash("Invalid username/email or password.", "error")
+
+    return render_template("login.html")
 
 def totals(uid, month, year):
     conn=get_db()
@@ -140,31 +189,154 @@ def globals():
 @app.route("/")
 def home(): return redirect(url_for("dashboard" if "user_id" in session else "login"))
 
-@app.route("/register",methods=["GET","POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method=="POST":
-        name=request.form.get("name","").strip(); email=request.form.get("email","").strip().lower()
-        password=request.form.get("password",""); confirm=request.form.get("confirm_password","")
-        if not name or not email or not password: flash("Please fill all required fields.","error"); return redirect(url_for("register"))
-        if password!=confirm: flash("Passwords do not match.","error"); return redirect(url_for("register"))
-        if len(password)<6: flash("Password must be at least 6 characters.","error"); return redirect(url_for("register"))
-        conn=get_db()
-        try:
-            conn.execute("INSERT INTO users(name,email,password) VALUES(?,?,?)",(name,email,generate_password_hash(password))); conn.commit()
-        except sqlite3.IntegrityError:
-            conn.close(); flash("Email is already registered.","error"); return redirect(url_for("register"))
-        conn.close(); flash("Account created. Please login.","success"); return redirect(url_for("login"))
+
+    if request.method == "POST":
+
+        name = request.form.get("name", "").strip()
+
+        username = request.form.get(
+            "username",
+            ""
+        ).strip().lower()
+
+        email = request.form.get(
+            "email",
+            ""
+        ).strip().lower()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        confirm = request.form.get(
+            "confirm_password",
+            ""
+        )
+
+        # Check required fields
+        if not name or not username or not email or not password:
+
+            flash(
+                "Please fill all required fields.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        # Username length
+        if len(username) < 3:
+
+            flash(
+                "Username must be at least 3 characters.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        # Username cannot contain spaces
+        if " " in username:
+
+            flash(
+                "Username cannot contain spaces.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        # Check password confirmation
+        if password != confirm:
+
+            flash(
+                "Passwords do not match.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        # Check password length
+        if len(password) < 6:
+
+            flash(
+                "Password must be at least 6 characters.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        # Connect to database
+        conn = get_db()
+
+        # Check whether username or email already exists
+        existing = conn.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE email = ?
+            OR username = ?
+            """,
+            (
+                email,
+                username
+            )
+        ).fetchone()
+
+        if existing:
+
+            conn.close()
+
+            flash(
+                "Email or username is already registered.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        # Create new user
+        conn.execute(
+            """
+            INSERT INTO users
+            (name, username, email, password)
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                name,
+                username,
+                email,
+                generate_password_hash(password)
+            )
+        )
+
+        conn.commit()
+        conn.close()
+
+        flash(
+            "Account created successfully. Please login.",
+            "success"
+        )
+
+        return redirect(
+            url_for("login")
+        )
+
     return render_template("register.html")
 
-@app.route("/login",methods=["GET","POST"])
-def login():
-    if request.method=="POST":
-        email=request.form.get("email","").strip().lower(); password=request.form.get("password","")
-        conn=get_db(); user=conn.execute("SELECT * FROM users WHERE email=?",(email,)).fetchone(); conn.close()
-        if user and check_password_hash(user["password"],password):
-            session["user_id"]=user["id"]; session["user_name"]=user["name"]; return redirect(url_for("dashboard"))
-        flash("Invalid email or password.","error")
-    return render_template("login.html")
+@app.route("/login", methods=["GET", "POST"])
+
 
 @app.route("/logout")
 def logout(): session.clear(); flash("Logged out successfully.","success"); return redirect(url_for("login"))
@@ -472,6 +644,110 @@ def profile():
         except sqlite3.IntegrityError: conn.close(); flash("That email is already in use.","error"); return redirect(url_for("profile"))
         session["user_name"]=name; conn.close(); flash("Profile updated successfully.","success"); return redirect(url_for("profile"))
     conn.close(); return render_template("profile.html",user=user)
+
+@app.route("/change-password", methods=["POST"])
+@login_required
+def change_password():
+
+    current_password = request.form.get(
+        "current_password",
+        ""
+    )
+
+    new_password = request.form.get(
+        "new_password",
+        ""
+    )
+
+    confirm_password = request.form.get(
+        "confirm_password",
+        ""
+    )
+
+    if not current_password or not new_password or not confirm_password:
+
+        flash(
+            "Please fill all password fields.",
+            "error"
+        )
+
+        return redirect(url_for("profile"))
+
+    if new_password != confirm_password:
+
+        flash(
+            "New passwords do not match.",
+            "error"
+        )
+
+        return redirect(url_for("profile"))
+
+    if len(new_password) < 6:
+
+        flash(
+            "New password must be at least 6 characters.",
+            "error"
+        )
+
+        return redirect(url_for("profile"))
+
+    conn = get_db()
+
+    user = conn.execute(
+        """
+        SELECT password
+        FROM users
+        WHERE id=?
+        """,
+        (session["user_id"],)
+    ).fetchone()
+
+    if not user:
+
+        conn.close()
+
+        flash(
+            "User account not found.",
+            "error"
+        )
+
+        return redirect(url_for("profile"))
+
+    if not check_password_hash(
+        user["password"],
+        current_password
+    ):
+
+        conn.close()
+
+        flash(
+            "Current password is incorrect.",
+            "error"
+        )
+
+        return redirect(url_for("profile"))
+
+    conn.execute(
+        """
+        UPDATE users
+        SET password=?
+        WHERE id=?
+        """,
+        (
+            generate_password_hash(new_password),
+            session["user_id"]
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    flash(
+        "Password changed successfully.",
+        "success"
+    )
+
+    return redirect(url_for("profile"))
 
 @app.route("/help")
 @login_required
@@ -835,6 +1111,185 @@ def view_ticket(ticket_id):
         ticket=ticket,
         messages=messages
     )
+
+@app.route("/ai-assistant", methods=["GET", "POST"])
+@login_required
+def ai_assistant():
+
+    answer = None
+    question = ""
+
+    if request.method == "POST":
+
+        question = request.form.get("question", "").strip()
+
+        if not question:
+            flash("Please enter a question.", "error")
+            return redirect(url_for("ai_assistant"))
+
+        uid = session["user_id"]
+
+        conn = get_db()
+
+        # Get current month/year
+        today = date.today()
+        month = today.month
+        year = today.year
+
+        # Get income and expense
+        income, expense = totals(uid, month, year)
+
+        # Get budget
+        budget_row = conn.execute(
+            """
+            SELECT amount
+            FROM budgets
+            WHERE user_id=? AND month=? AND year=?
+            """,
+            (uid, month, year)
+        ).fetchone()
+
+        budget_amount = float(budget_row["amount"]) if budget_row else 0
+
+        # Get category spending
+        category_rows = conn.execute(
+            """
+            SELECT category, SUM(amount) AS total
+            FROM transactions
+            WHERE user_id=?
+            AND type='expense'
+            AND strftime('%m', transaction_date)=?
+            AND strftime('%Y', transaction_date)=?
+            GROUP BY category
+            ORDER BY total DESC
+            """,
+            (uid, f"{month:02d}", str(year))
+        ).fetchall()
+
+        conn.close()
+
+        categories = []
+
+        for row in category_rows:
+            categories.append(
+                f"{row['category']}: ₹{float(row['total']):.2f}"
+            )
+
+        category_text = ", ".join(categories)
+
+        balance = income - expense
+
+        # Simple AI-style financial assistant
+        q = question.lower()
+
+        if "spend" in q or "expense" in q:
+            answer = (
+                f"This month you have earned ₹{income:.2f} and "
+                f"spent ₹{expense:.2f}. Your current balance is "
+                f"₹{balance:.2f}."
+            )
+
+        elif "budget" in q:
+            if budget_amount:
+                remaining = budget_amount - expense
+
+                answer = (
+                    f"Your monthly budget is ₹{budget_amount:.2f}. "
+                    f"You have used ₹{expense:.2f}, leaving "
+                    f"₹{remaining:.2f}."
+                )
+            else:
+                answer = (
+                    "You have not set a monthly budget yet. "
+                    "Set one from the Budget page so I can help "
+                    "you track it."
+                )
+
+        elif "save" in q:
+            savings = max(income - expense, 0)
+
+            answer = (
+                f"Based on your current numbers, you have "
+                f"₹{savings:.2f} left after expenses this month. "
+                f"Consider keeping part of this amount as savings "
+                f"and maintaining an emergency fund."
+            )
+
+        elif "category" in q or "where" in q:
+            if category_text:
+                answer = (
+                    "Your spending by category is: "
+                    + category_text
+                )
+            else:
+                answer = "You don't have expense data for this month yet."
+
+        else:
+            answer = (
+                f"Here is your current financial summary: "
+                f"income ₹{income:.2f}, expenses ₹{expense:.2f}, "
+                f"balance ₹{balance:.2f}. "
+                f"You can ask me about your spending, budget, "
+                f"savings or categories."
+            )
+
+    return render_template(
+        "ai_assistant.html",
+        answer=answer,
+        question=question
+    )
+
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY")
+)
+
+@app.route("/api/ai-chat", methods=["POST"])
+@login_required
+def ai_chat():
+
+    try:
+        data = request.get_json()
+        question = data.get("question", "").strip()
+
+        if not question:
+            return jsonify({
+                "answer": "Please ask me something."
+            })
+
+        response = client.responses.create(
+            model="gpt-5.6-luna",
+            instructions="""
+You are SpendTrack AI, a helpful personal finance assistant
+inside a monthly expense tracking application.
+
+Answer the user's question directly and clearly.
+
+If the question is about their finances, use the financial
+information provided by the application.
+
+Do not invent financial information.
+
+If information is unavailable, clearly say that it is unavailable.
+
+Use Indian Rupees (₹) when discussing money.
+
+Keep answers simple and useful.
+""",
+            input=question
+        )
+
+        return jsonify({
+            "answer": response.output_text
+        })
+
+    except Exception as e:
+
+        print("AI ERROR:", repr(e))
+
+        return jsonify({
+            "answer": "AI error: " + str(e)
+        }), 500
+
 
 if __name__=="__main__":
     init_db()

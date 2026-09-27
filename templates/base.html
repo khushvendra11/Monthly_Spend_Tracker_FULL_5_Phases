@@ -30,6 +30,19 @@
         ⋮
     </button>
 
+
+<button class="theme-btn" onclick="toggleThemeMenu()">
+    🎨 Theme
+</button>
+
+<div class="theme-menu" id="themeMenu">
+    <button onclick="setTheme('light')">☀️ Light</button>
+    <button onclick="setTheme('dark')">🌙 Dark</button>
+    <button onclick="setTheme('purple')">💜 Purple</button>
+    <button onclick="setTheme('red')">❤️ Red</button>
+    <button onclick="setTheme('ocean')">🌊 Ocean</button>
+</div>
+
     <div class="navlinks" id="mainNav">
 
         <a href="{{ url_for('dashboard') }}">
@@ -115,6 +128,180 @@ function toggleMobileMenu() {
     const menu = document.getElementById("mainNav");
 
     menu.classList.toggle("mobile-open");
+
+}
+
+</script>
+<script>
+function toggleThemeMenu() {
+    document.getElementById("themeMenu").classList.toggle("show");
+}
+
+function setTheme(theme) {
+    document.body.setAttribute("data-theme", theme);
+    localStorage.setItem("spendtrack-theme", theme);
+    document.getElementById("themeMenu").classList.remove("show");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const savedTheme = localStorage.getItem("spendtrack-theme") || "light";
+    document.body.setAttribute("data-theme", savedTheme);
+});
+</script>
+
+<!-- ==============================
+     FLOATING AI ASSISTANT
+================================ -->
+
+<button class="floating-ai-btn" onclick="toggleAI()" title="Ask SpendTrack AI">
+    🤖
+</button>
+
+<div class="ai-chat-box" id="aiChatBox">
+
+    <div class="ai-chat-header">
+        <div>
+            <strong>SpendTrack AI</strong>
+            <small>Your personal money assistant</small>
+        </div>
+
+        <button onclick="toggleAI()">×</button>
+    </div>
+
+    <div class="ai-messages" id="aiMessages">
+
+        <div class="ai-message bot">
+            👋 Hi! I'm SpendTrack AI.<br><br>
+            Ask me anything about your spending, budget, savings,
+            transactions or general money management.
+        </div>
+
+    </div>
+
+    <div class="ai-input-area">
+
+        <input
+            type="text"
+            id="aiInput"
+            placeholder="Ask me anything..."
+            onkeydown="handleAIKey(event)"
+        >
+
+        <button onclick="sendAIMessage()">
+            ➤
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+function toggleAI() {
+
+    const box = document.getElementById("aiChatBox");
+
+    box.classList.toggle("ai-open");
+
+    if (box.classList.contains("ai-open")) {
+        setTimeout(() => {
+            document.getElementById("aiInput").focus();
+        }, 200);
+    }
+}
+
+
+function handleAIKey(event) {
+
+    if (event.key === "Enter") {
+        sendAIMessage();
+    }
+
+}
+
+
+async function sendAIMessage() {
+
+    const input = document.getElementById("aiInput");
+    const messages = document.getElementById("aiMessages");
+
+    const question = input.value.trim();
+
+    if (!question) {
+        return;
+    }
+
+    // Show user's message
+
+    const userMessage = document.createElement("div");
+
+    userMessage.className = "ai-message user";
+
+    userMessage.innerText = question;
+
+    messages.appendChild(userMessage);
+
+    input.value = "";
+
+    messages.scrollTop = messages.scrollHeight;
+
+
+    // Show thinking message
+
+    const thinking = document.createElement("div");
+
+    thinking.className = "ai-message bot";
+    thinking.id = "ai-thinking";
+
+    thinking.innerText = "🤔 Thinking...";
+
+    messages.appendChild(thinking);
+
+    messages.scrollTop = messages.scrollHeight;
+
+
+    try {
+
+        const response = await fetch("/api/ai-chat", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                question: question
+            })
+
+        });
+
+
+        const data = await response.json();
+
+
+        thinking.remove();
+
+
+        const botMessage = document.createElement("div");
+
+        botMessage.className = "ai-message bot";
+
+        botMessage.innerText = data.answer || "Sorry, I couldn't answer that.";
+
+        messages.appendChild(botMessage);
+
+        messages.scrollTop = messages.scrollHeight;
+
+
+    } catch (error) {
+
+        thinking.innerText =
+            "❌ Something went wrong. Please try again.";
+
+        console.error(error);
+
+    }
 
 }
 
