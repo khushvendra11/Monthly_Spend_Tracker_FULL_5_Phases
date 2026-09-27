@@ -130,7 +130,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-
+@app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
@@ -333,7 +333,6 @@ def register():
 
     return render_template("register.html")
 
-@app.route("/login", methods=["GET", "POST"])
 
 
 @app.route("/logout")
@@ -1237,9 +1236,6 @@ def ai_assistant():
         question=question
     )
 
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY")
-)
 
 @app.route("/api/ai-chat", methods=["POST"])
 @login_required
